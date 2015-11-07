@@ -14,7 +14,7 @@ import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 
-public class PassangerPanel extends JPanel {
+public class PassengerPanel extends JPanel {
 
     private static final long serialVersionUID = 7112021747431420309L;
     
@@ -23,7 +23,7 @@ public class PassangerPanel extends JPanel {
 
     private MultiplePersonElevator elevator;
 
-    public PassangerPanel (MultiplePersonElevator elevator) {
+    public PassengerPanel (MultiplePersonElevator elevator) {
         this.elevator = elevator;
         this.x= elevator.X_PIXELS;
         this.y = elevator.Y_PIXELS;
