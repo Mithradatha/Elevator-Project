@@ -33,10 +33,12 @@ public class PassengerRequest {
     public void setWeight(int weight) {
         this.weight = weight;
     }
+    
     private Time time_pressed_button;  // time when the button was pressed
     private int floor_from; // the floor from which the elevator was called
     private int floor_to; // the floor where the passenger is headed to
     private int weight; // weight, in pounds
+    
     public PassengerRequest(Time time_pressed_button, int floor_from, int floor_to, int weight) {
 
         this.time_pressed_button = time_pressed_button;
