@@ -9,7 +9,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.util.Random;
+import java.util.ArrayList;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -21,12 +21,16 @@ public class PassengerPanel extends JPanel {
     private int x;
     private int y;
 
-    private MultiplePersonElevator elevator;
+    private Elevator elevator;
 
-    public PassengerPanel (MultiplePersonElevator elevator) {
+    private ArrayList<PassengerRequest>[] floorPassengers;
+
+    public PassengerPanel (Elevator elevator, int X_PIXELS, int Y_PIXELS, ArrayList<PassengerRequest>[] floorPassengers) {
         this.elevator = elevator;
-        this.x= elevator.X_PIXELS;
-        this.y = elevator.Y_PIXELS;
+        this.x= X_PIXELS;
+        this.y = Y_PIXELS;
+        this.floorPassengers = floorPassengers;
+
 
         setPreferredSize(new Dimension((x - (x / 4)) / 2, y));
         setBackground(Color.WHITE);
@@ -36,29 +40,31 @@ public class PassengerPanel extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         
-        Random rnd = new Random();
-        int nPassangers = rnd.nextInt(10);
 
         int nFloors = elevator.floors;
 
         int width = getWidth();
-        int height = (getHeight() / nFloors);
-        //int passanger_width = width / nPassangers;
-        //int passanger_height = height / 2;
+        int height = (getHeight() / elevator.floors);
 
-        //Image img = new ImageIcon("C:\\Users\\Sam\\cse1002\\Eclipse\\ElevatorProject\\src\\project\\stick_figure.png").getImage();
         g.setColor(Color.BLACK);
 
         for (int i = nFloors; i > 0; i--) {
             g.drawLine(0, i * height, width, i * height);
-            //int y_origin = Math.abs(getHeight() - (i * height));
-            //int x_origin = width - passanger_width;
-            for (int j = 0; j < nPassangers; j++) { 
-                //g.drawImage(img, x_origin, y_origin, passanger_width, passanger_height, this);
-               // x_origin -= passanger_width;
+        }
+        
+        int passenger_width = getWidth() / 5;
+        int passenger_height = getHeight() / elevator.floors;
+        
+        Image img = new ImageIcon("C:\\Users\\Sam\\cse1002\\Eclipse\\ElevatorProject\\src\\project\\stick_figure.png").getImage();
+        
+        
+        for (int i = 1; i < floorPassengers.length; i++) {
+            int x_origin = width - passenger_width;
+            int y_origin = getHeight() - (i * height);
+            for (int j = 0; j < floorPassengers[i].size(); j++) {
+                g.drawImage(img, x_origin, y_origin, passenger_width, passenger_height, this);
+                x_origin -= passenger_width;
             }
-        }  
-
-
+        }
     }
 }

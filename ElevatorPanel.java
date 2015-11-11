@@ -16,28 +16,31 @@ import javax.swing.JPanel;
 public class ElevatorPanel extends JPanel {
 
     private static final long serialVersionUID = 6892588095905304070L;
-    
+
     private int x;
     private int y;
 
-    private MultiplePersonElevator elevator;
+    private Elevator elevator;
     
-    public ElevatorPanel(MultiplePersonElevator elevator) {
-        this.elevator = elevator;
-        this.x = elevator.X_PIXELS;
-        this.y = elevator.Y_PIXELS;
+    private boolean delay;
 
+    public ElevatorPanel(Elevator elevator, int X_PIXELS, int Y_PIXELS, boolean delay) {
+        this.elevator = elevator;
+        this.x = X_PIXELS;
+        this.y = Y_PIXELS;
+        this.delay = delay;
+        
         setPreferredSize(new Dimension(x/4, y));
         setBackground(Color.BLACK);
     }
-    
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        
+
         int currentLevel = elevator.currentFloor;
         int nFloors = elevator.floors;
-        
+
         int width = getWidth();
         int height = (getHeight() / nFloors);
         int x_origin = 0;
@@ -45,13 +48,17 @@ public class ElevatorPanel extends JPanel {
 
         g.setColor(Color.GRAY);
         g.fillRect(x_origin, y_origin, width, height);
-        
-        g.setColor(Color.DARK_GRAY);
+
+        if (delay) {
+            g.setColor(Color.BLACK);
+        } else {
+            g.setColor(Color.DARK_GRAY);
+        }
         g.fillRect(width/4, y_origin, width/2, height);
-        
+
         g.setColor(Color.BLACK);
         g.drawLine(width/2, y_origin, width/2, y_origin + height + 1);
-        
+
         Image img = new ImageIcon("C:\\Users\\Sam\\cse1002\\Eclipse\\ElevatorProject\\src\\project\\elevator_button3.png").getImage();
         g.drawImage(img, width/8, y_origin + height/2, width/16, height/4, this);
     }

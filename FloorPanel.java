@@ -19,13 +19,13 @@ public class FloorPanel extends JPanel {
     private int x;
     private int y;
     
-    private MultiplePersonElevator elevator;
+    private Elevator elevator;
     
-    public FloorPanel (MultiplePersonElevator elevator) {
+    public FloorPanel (Elevator elevator, int X_PIXELS, int Y_PIXELS) {
         this.elevator = elevator;
-        this.x = elevator.X_PIXELS;
-        this.y = elevator.Y_PIXELS;
-        //int dimension_offset = y % elevator.floors;
+        this.x = X_PIXELS;
+        this.y = Y_PIXELS;
+
         setPreferredSize(new Dimension((x - (x / 4)) / 2, y));
         setBackground(Color.WHITE);
     }
@@ -35,17 +35,16 @@ public class FloorPanel extends JPanel {
         super.paintComponent(g);
         
         int nFloors = elevator.floors;
-        //int odd = (getHeight() % nFloors == 0) ? 0 : 1;
         
         int width = getWidth();
         int height = (getHeight() / nFloors); 
-                //+ odd;
+
         int offset = height / 2;
         
-        Font level_font = new Font("Times New Roman", Font.BOLD, 17);
-        String standard = new String("Floor: 1000");
+        Font level_font = new Font("Times New Roman", Font.BOLD, height / 2);
+        //String standard = new String("Floor: 100");
         
-        int font_width = g.getFontMetrics(level_font).stringWidth(standard);
+        //int font_width = g.getFontMetrics(level_font).stringWidth(standard);
         int j = nFloors;
         
         g.setColor(Color.BLACK);
@@ -53,7 +52,7 @@ public class FloorPanel extends JPanel {
         
         for (int i = 1; i <= nFloors; i++) {
             g.drawLine(0, i * height, width, i * height);
-            g.drawString("Floor: " + j, width/3 - font_width, i * height - offset);
+            g.drawString("Floor: " + j, 0, i * height - offset);
             j--;
         }
     }
