@@ -34,6 +34,8 @@ public class BaseElevator extends Elevator implements ActionListener {
     private boolean up;
     protected boolean delay;
     
+    private long systemTime;
+    
     
     protected ArrayList<PassengerRequest>[] floorPassengers;
     protected ArrayList<PassengerRequest> elevatorPassengers;
@@ -70,6 +72,7 @@ public class BaseElevator extends Elevator implements ActionListener {
         this.floorPassengers = new ArrayList[floors+1];
         this.elevatorPassengers = new ArrayList<PassengerRequest>();
         this.delay = false;
+        this.systemTime = System.currentTimeMillis();
         this.nPassengers = 0;
         this.weight = 0;
         this.up = true;
@@ -119,7 +122,7 @@ public class BaseElevator extends Elevator implements ActionListener {
             floor_to = rng.nextInt(floors) + 1;
         }
         int new_weight = 250;//rng.nextInt(150) + 100;
-        PassengerRequest request = new PassengerRequest(new Time(System.currentTimeMillis()), floor_from, floor_to, new_weight);
+        PassengerRequest request = new PassengerRequest(new Time(currentTime.getTime() + (System.currentTimeMillis() - systemTime)), floor_from, floor_to, new_weight);
         
         floorPassengers[request.getFloorFrom()].add(request);
         nPassengers++;
@@ -147,7 +150,9 @@ public class BaseElevator extends Elevator implements ActionListener {
         for (PassengerRequest releaseRequest : elevatorPassengers) {
             if (releaseRequest.getFloorTo() == currentFloor) {
                 weight -= releaseRequest.getWeight();
-                Time releaseTime = new Time(System.currentTimeMillis());
+                currentTime.setTime(currentTime.getTime() + (System.currentTimeMillis() - systemTime));
+                Time releaseTime = currentTime;
+                System.out.println(releaseRequest.getTimePressedButton() + " --- " + releaseTime);
                 PassengerReleased releasedPassenger = new PassengerReleased(releaseRequest, releaseTime);
                 releasedPassengers.add(releasedPassenger);
                 nPassengers--;
@@ -189,8 +194,7 @@ public class BaseElevator extends Elevator implements ActionListener {
 
         final ArrayList<PassengerReleased> released = new ArrayList<PassengerReleased>();
         
-        int fps = timeMoveOneFloor;
-        int target_interval = 1000 / fps;
+        int target_interval = 1000 / timeMoveOneFloor;
         int max_elapsed_cycles = 5;
         int next_passenger = 0;
 
@@ -205,7 +209,7 @@ public class BaseElevator extends Elevator implements ActionListener {
             elapsedCycles = 0;
 
             next_passenger++;
-            if (next_passenger > fps) {   
+            if (next_passenger > floors / 2) {   
                 addFloorPassenger();
                 next_passenger = 0;
             }
@@ -258,7 +262,7 @@ public class BaseElevator extends Elevator implements ActionListener {
     public static void main(String... args) throws InterruptedException {
         int capacity = 500;
         int timeMoveOneFloor = 10;
-        int floors = 20;
+        int floors = 9;
         int doorDelta = 5;
         boolean verbose = false;
 
@@ -266,6 +270,6 @@ public class BaseElevator extends Elevator implements ActionListener {
         Queue<PassengerRequest> requests = new PriorityBlockingQueue<PassengerRequest>();
         elevator.initialize(requests);
         System.out.println(requests);
-        elevator.operate();
+        System.out.println(elevator.operate());
     }
 }
