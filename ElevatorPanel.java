@@ -21,14 +21,11 @@ public class ElevatorPanel extends JPanel {
     private int y;
 
     private Elevator elevator;
-    
-    private boolean delay;
 
-    public ElevatorPanel(Elevator elevator, int X_PIXELS, int Y_PIXELS, boolean delay) {
+    public ElevatorPanel(Elevator elevator, int X_PIXELS, int Y_PIXELS) {
         this.elevator = elevator;
         this.x = X_PIXELS;
         this.y = Y_PIXELS;
-        this.delay = delay;
         
         setPreferredSize(new Dimension(x/4, y));
         setBackground(Color.BLACK);
@@ -49,11 +46,7 @@ public class ElevatorPanel extends JPanel {
         g.setColor(Color.GRAY);
         g.fillRect(x_origin, y_origin, width, height);
 
-        if (delay) {
-            g.setColor(Color.BLACK);
-        } else {
-            g.setColor(Color.DARK_GRAY);
-        }
+        g.setColor(Color.DARK_GRAY);
         g.fillRect(width/4, y_origin, width/2, height);
 
         g.setColor(Color.BLACK);

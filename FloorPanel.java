@@ -40,11 +40,12 @@ public class FloorPanel extends JPanel {
         int height = (getHeight() / nFloors); 
 
         int offset = height / 2;
+        int font_size = (nFloors > 4) ? height / 2 : height / 4;
         
-        Font level_font = new Font("Times New Roman", Font.BOLD, height / 2);
+        Font level_font = new Font("Times New Roman", Font.BOLD, font_size);
         //String standard = new String("Floor: 100");
         
-        //int font_width = g.getFontMetrics(level_font).stringWidth(standard);
+        //int font_width = g.stringWidth(standard);
         int j = nFloors;
         
         g.setColor(Color.BLACK);

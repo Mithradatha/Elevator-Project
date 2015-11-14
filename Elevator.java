@@ -11,7 +11,6 @@ import java.util.Queue;
 
 public abstract class Elevator {
     
-    
     protected int capacity;  // how many pounds can be present in the elevator 
     // at any point of time
     

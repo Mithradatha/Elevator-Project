@@ -7,7 +7,7 @@ package project;
 
 import java.sql.Time;
 
-public class PassengerRequest implements Comparable<PassengerRequest>{
+public class PassengerRequest /*implements Comparable<PassengerRequest>*/{
     
     public Time getTimePressedButton() {
         return time_pressed_button;
@@ -47,7 +47,7 @@ public class PassengerRequest implements Comparable<PassengerRequest>{
         this.weight = weight;
     }
     
-    @Override
+   /* @Override
     public int compareTo (PassengerRequest o) {
         if (this.floor_from < o.floor_from) {
             return -1;
@@ -57,7 +57,7 @@ public class PassengerRequest implements Comparable<PassengerRequest>{
             return 0;
         }
     }
-    
+    */
     
 }
 
