@@ -6,14 +6,15 @@
 package project;
 
 import java.awt.BorderLayout;
-import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Time;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -39,13 +40,15 @@ public class BaseElevator extends Elevator implements ActionListener {
 
     private long systemTime;
     private long afterHours;
-    
+
     private int speed;
-    
+
     protected ArrayList<PassengerRequest>[] floorPassengers;
     protected ArrayList<PassengerRequest> elevatorPassengers;
+    protected int[] elevatorOffPassengers;
 
     private int weight;
+    private String sample;
 
     /**
      * capacity;
@@ -74,6 +77,7 @@ public class BaseElevator extends Elevator implements ActionListener {
         this.X_PIXELS = 800;
         this.Y_PIXELS = 600 - 600 % floors;
         this.running = false;
+        this.elevatorOffPassengers = new int[floors+1];
         this.floorPassengers = new ArrayList[floors+1];
         this.elevatorPassengers = new ArrayList<PassengerRequest>();
         this.systemTime = System.currentTimeMillis();
@@ -90,7 +94,7 @@ public class BaseElevator extends Elevator implements ActionListener {
 
         this.elevatorPanel = new ElevatorPanel(this, X_PIXELS, Y_PIXELS);
         this.passangerPanel = new PassengerPanel(this, X_PIXELS, Y_PIXELS, floorPassengers);
-        this.floorPanel = new FloorPanel(this, X_PIXELS, Y_PIXELS);
+        this.floorPanel = new FloorPanel(this, X_PIXELS, Y_PIXELS, elevatorOffPassengers);
 
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Actions");
@@ -122,7 +126,7 @@ public class BaseElevator extends Elevator implements ActionListener {
     @Override
     public void initialize (final Queue<PassengerRequest> requests) {
     }
-    
+
     public void setSimulationSpeed(int speed_X) {
         this.speed *= speed_X;
     }
@@ -130,6 +134,10 @@ public class BaseElevator extends Elevator implements ActionListener {
     public void setHours (Time start, Time end) {
         this.currentTime = start;
         this.afterHours = end.getTime();
+    }
+    
+    public void setSampleRange (String range) {
+        this.sample = range;
     }
 
     public void addFloorPassenger () {
@@ -140,7 +148,8 @@ public class BaseElevator extends Elevator implements ActionListener {
             floor_to = rng.nextInt(floors) + 1;
         }
         int new_weight = 250;//rng.nextInt(150) + 100;
-        PassengerRequest request = new PassengerRequest(new Time(currentTime.getTime() + (System.currentTimeMillis() - systemTime)), floor_from, floor_to, new_weight);
+
+        PassengerRequest request = new PassengerRequest(new Time(systemTime + (System.currentTimeMillis() - systemTime)), floor_from, floor_to, new_weight);
 
         floorPassengers[request.getFloorFrom()].add(request);
         nPassengers++;
@@ -164,14 +173,13 @@ public class BaseElevator extends Elevator implements ActionListener {
             }
         }
 
-        
-
         for (PassengerRequest releaseRequest : elevatorPassengers) {
             if (releaseRequest.getFloorTo() == currentFloor) {
                 weight -= releaseRequest.getWeight();
-                Time releaseTime = new Time(currentTime.getTime() + (System.currentTimeMillis() - systemTime));
-                System.out.println(releaseRequest.getTimePressedButton() + " --- " + releaseTime);
-                PassengerReleased releasedPassenger = new PassengerReleased(releaseRequest, releaseTime);
+
+
+                PassengerReleased releasedPassenger = new PassengerReleased(releaseRequest, new Time(systemTime + (System.currentTimeMillis() - systemTime)));
+                System.out.println(releaseRequest.getTimePressedButton() + " --- " + releasedPassenger.getTimeArrived());
                 releasedPassengers.add(releasedPassenger);
                 nPassengers--;
                 delay = true;
@@ -181,6 +189,7 @@ public class BaseElevator extends Elevator implements ActionListener {
         for (PassengerReleased released : releasedPassengers) {
             if (elevatorPassengers.contains(released.getPassengerRequest())) {
                 elevatorPassengers.remove(released.getPassengerRequest());
+                elevatorOffPassengers[currentFloor]++;
             }
         }
 
@@ -191,7 +200,7 @@ public class BaseElevator extends Elevator implements ActionListener {
             weight += elevatorRequest.getWeight();
             delay = true;
         }
-        
+
 
 
         return releasedPassengers;
@@ -238,7 +247,9 @@ public class BaseElevator extends Elevator implements ActionListener {
             }
 
             ArrayList<PassengerReleased> moved = this.move();
-            if (delay) door_timer ++;
+            if (delay) {
+                door_timer ++;
+            }
             if (door_timer > doorDelta) {
                 door_timer = 0;
                 delay = false;
@@ -262,8 +273,8 @@ public class BaseElevator extends Elevator implements ActionListener {
                 moved.addAll(this.move());
             }
             if (!moved.isEmpty())
-            released.addAll(moved);
-            elevatorTime += (System.currentTimeMillis() - systemTime);
+                released.addAll(moved);
+            elevatorTime += (speed / 60) * (System.currentTimeMillis() - systemTime);
             if (elevatorTime >= afterHours) stopOperation();
         }
 
@@ -278,15 +289,81 @@ public class BaseElevator extends Elevator implements ActionListener {
 
     public void getStats(ArrayList<PassengerReleased> stats) {
         //frame.setVisible(false);
-        
+        if (stats.isEmpty()) return;
         JFrame jf = new JFrame("Time Analysis");
         jf.setSize(X_PIXELS, Y_PIXELS);
         
-        jf.setLayout(new FlowLayout());
+        int nRows = (stats.size() < 20) ? stats.size() + 5 : 25;
+
+        jf.setLayout(new GridLayout(nRows, 1, 0, 0));
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        for (PassengerReleased time : stats) {
-            jf.add(new JLabel(""+((time.getTimeArrived().getTime() - time.getPassengerRequest().getTimePressedButton().getTime())) / 1000));
+        /*JPanel fromPanel = new JPanel();
+        fromPanel.setLayout(new BoxLayout(fromPanel, BoxLayout.PAGE_AXIS));
+        JPanel toPanel = new JPanel();
+        toPanel.setLayout(new BoxLayout(toPanel, BoxLayout.PAGE_AXIS));
+        JPanel secondPanel = new JPanel();
+        secondPanel.setLayout(new BoxLayout(secondPanel, BoxLayout.PAGE_AXIS));
+        jf.add(toPanel, BorderLayout.CENTER);
+        jf.add(fromPanel, BorderLayout.WEST);
+        jf.add(secondPanel, BorderLayout.EAST);
+         */
+        /*JLabel fromTitle = new JLabel("Floor from:", JLabel.CENTER);
+        JLabel toTitle = new JLabel("Floor to:", JLabel.CENTER);
+        JLabel timeTitle = new JLabel("Travel Time:", JLabel.CENTER);
+        jf.add(fromTitle);
+        jf.add(toTitle);
+        jf.add(timeTitle);*/
+        jf.add(new JLabel(""));
+        JLabel titleLabel = new JLabel("From   >   To   ::   Travel Time:", JLabel.CENTER);
+        titleLabel.setFont(new Font("Tahoma", Font.BOLD, 17));
+        jf.add(titleLabel);
+        jf.add(new JLabel(""));
+        //jf.setFont(new Font("Times New Roman", Font.PLAIN, 4));
+        
+        int sample_selection;
+        
+        switch (sample) {
+            case "Beginning":
+                sample_selection = 0;
+                break;
+            case "Middle":
+                sample_selection = stats.size() / 2;
+                break;
+            case "End":
+            default:
+                sample_selection = stats.size() - 20;
         }
+        
+
+        int sum = 0;
+        int count = 0;
+
+        for (PassengerReleased time : stats) {
+            PassengerRequest temp = time.getPassengerRequest();
+            long seconds = ((time.getTimeArrived().getTime() - temp.getTimePressedButton().getTime()) / 1000) * (speed / 60);
+            int from = temp.getFloorFrom();
+            int to = temp.getFloorTo();
+            seconds += (timeMoveOneFloor * Math.abs(from - to)) + (doorDelta * 2);
+            sum += seconds;
+            count++;
+            /*JLabel fromLabel = new JLabel(""+from, JLabel.CENTER);
+            JLabel toLabel = new JLabel(""+to, JLabel.CENTER);
+            JLabel timeLabel = new JLabel(seconds + " seconds", JLabel.CENTER);
+            jf.add(fromLabel);
+            jf.add(toLabel);
+            jf.add(timeLabel);*/
+            if (count > sample_selection) {
+                JLabel analysis = new JLabel(from + "     >     " + to + "    ::    " + seconds + "  seconds", JLabel.CENTER);
+                analysis.setFont(new Font("Times New Roman", Font.PLAIN, 15));
+                jf.add(analysis);
+            }
+        }
+        int avgSeconds = sum / stats.size();
+        Double avgMinutes = Double.valueOf(new DecimalFormat("#.##").format((double)avgSeconds / 60));
+        jf.add(new JLabel(""));
+        JLabel average = new JLabel("AVERAGE TIME:   " + avgSeconds + "  seconds" + "   (~ " + avgMinutes + " min)", JLabel.CENTER);
+        average.setFont(new Font("Tahoma", Font.BOLD, 17));
+        jf.add(average);
         //jf.setMinimumSize(new Dimension(X_PIXELS, Y_PIXELS));
         //jf.setMaximumSize(new Dimension(X_PIXELS, Y_PIXELS));
         //jf.pack();
@@ -315,17 +392,18 @@ public class BaseElevator extends Elevator implements ActionListener {
     @SuppressWarnings("deprecation")
     public static void main(String... args) throws InterruptedException {
         int capacity = 2000;
-        int timeMoveOneFloor = 20;
-        int floors = 25;
+        int timeMoveOneFloor = 10;
+        int floors = 21;
         int doorDelta = 5;
         boolean verbose = false;
 
         BaseElevator elevator = new BaseElevator(capacity, timeMoveOneFloor, floors, doorDelta, verbose);
-        Queue<PassengerRequest> requests = new PriorityBlockingQueue<PassengerRequest>();
-        elevator.initialize(requests);
-        elevator.setSimulationSpeed(5);
-        elevator.setHours(elevator.currentTime, new Time(10,00,00));
-        System.out.println(requests);
+        //Queue<PassengerRequest> requests = new PriorityBlockingQueue<PassengerRequest>();
+        //elevator.initialize(requests);
+        elevator.setSimulationSpeed(1);
+        elevator.setHours(elevator.currentTime, new Time(9,00,00));
+        elevator.setSampleRange("End"); //"Beginning", "Middle", "End"
+        //System.out.println(requests);
         elevator.operate();
     }
 }
